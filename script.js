@@ -189,6 +189,167 @@ let speechReady = false;
 let speechActivationAttempted = false;
 let fallbackTTSEnabled = true; // 启用备用TTS方案
 
+// 语音激活状态
+let speechActivationPromptShown = false;
+
+// 显示语音激活提示
+function showSpeechActivationPrompt() {
+    // 检查是否已经显示过或用户已经选择过
+    if (speechActivationPromptShown || localStorage.getItem('speechPromptShown') === 'true') {
+        return;
+    }
+    
+    const prompt = document.getElementById('speechActivationPrompt');
+    if (prompt) {
+        prompt.classList.remove('hidden');
+        speechActivationPromptShown = true;
+        
+        // 绑定激活按钮
+        const activateBtn = document.getElementById('activateSpeechBtn');
+        const skipBtn = document.getElementById('skipSpeechBtn');
+        
+        if (activateBtn) {
+            activateBtn.addEventListener('click', () => {
+                activateSpeechWithPrompt();
+                hideSpeechActivationPrompt();
+            });
+        }
+        
+        if (skipBtn) {
+            skipBtn.addEventListener('click', () => {
+                localStorage.setItem('speechPromptShown', 'true');
+                localStorage.setItem('speechEnabled', 'false');
+                soundEnabled = false;
+                hideSpeechActivationPrompt();
+            });
+        }
+    }
+}
+
+// 隐藏语音激活提示
+function hideSpeechActivationPrompt() {
+    const prompt = document.getElementById('speechActivationPrompt');
+    if (prompt) {
+        prompt.classList.add('hidden');
+    }
+}
+
+// 通过提示激活语音
+function activateSpeechWithPrompt() {
+    localStorage.setItem('speechPromptShown', 'true');
+    localStorage.setItem('speechEnabled', 'true');
+    soundEnabled = true;
+    
+    // 检查浏览器兼容性
+    if (!('speechSynthesis' in window)) {
+        alert('抱歉，您的浏览器不支持语音合成功能。建议使用Chrome、Safari或Edge浏览器。');
+        return;
+    }
+    
+    // 立即激活语音
+    try {
+        // 停止任何现有的语音
+        speechSynthesis.cancel();
+        
+        // 等待一小段时间再开始
+        setTimeout(() => {
+            // 播放一个短暂的测试音
+            const testUtterance = new SpeechSynthesisUtterance('语音已激活');
+            testUtterance.volume = speechVolume;
+            testUtterance.rate = 1.0;
+            testUtterance.pitch = 1.0;
+            
+            // 尝试选择英文语音
+            const voices = speechSynthesis.getVoices();
+            if (voices.length > 0) {
+                const englishVoice = voices.find(voice => 
+                    voice.lang.includes('en-US') || voice.lang.includes('en')
+                );
+                if (englishVoice) {
+                    testUtterance.voice = englishVoice;
+                }
+            }
+            
+            testUtterance.onstart = () => {
+                speechReady = true;
+                console.log('✅ 语音通过提示激活成功');
+                showSuccessMessage('语音功能已成功激活！');
+            };
+            
+            testUtterance.onend = () => {
+                speechReady = true;
+                // 如果有当前单词，自动朗读
+                if (currentWord) {
+                    setTimeout(() => speakWord(currentWord), 500);
+                }
+            };
+            
+            testUtterance.onerror = (e) => {
+                console.log('⚠️ 语音激活测试失败:', e.error);
+                speechReady = true; // 仍然标记为已准备
+                // 显示错误提示但不阻止使用
+                showWarningMessage('语音激活可能有问题，但您仍可继续练习。如遇问题请刷新页面。');
+            };
+            
+            speechSynthesis.speak(testUtterance);
+            
+        }, 100);
+        
+    } catch (error) {
+        console.error('语音激活失败:', error);
+        speechReady = true;
+        showWarningMessage('语音功能启动时遇到问题，但您仍可继续练习。');
+    }
+}
+
+// 显示成功消息
+function showSuccessMessage(message) {
+    const successDiv = document.createElement('div');
+    successDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #4CAF50;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 3000;
+        font-size: 14px;
+        max-width: 300px;
+    `;
+    successDiv.innerHTML = `✅ ${message}`;
+    document.body.appendChild(successDiv);
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
+}
+
+// 显示警告消息
+function showWarningMessage(message) {
+    const warningDiv = document.createElement('div');
+    warningDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #ff9800;
+        color: white;
+        padding: 15px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 3000;
+        font-size: 14px;
+        max-width: 300px;
+    `;
+    warningDiv.innerHTML = `⚠️ ${message}`;
+    document.body.appendChild(warningDiv);
+    
+    setTimeout(() => {
+        warningDiv.remove();
+    }, 5000);
+}
+
 // 请求语音权限和用户交互
 function requestSpeechPermission() {
     const speechStatusDiv = document.getElementById('speechStatus');

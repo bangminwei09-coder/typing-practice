@@ -187,6 +187,25 @@
                 </div>
             </div>
 
+            <!-- 语音激活提示 -->
+            <div id="speechActivationPrompt" class="speech-activation-prompt hidden">
+                <div class="prompt-overlay"></div>
+                <div class="prompt-content">
+                    <div class="prompt-icon">🔊</div>
+                    <h3>启用语音朗读功能</h3>
+                    <p>点击下方按钮来启用单词朗读功能，这样每个单词都会自动播放发音</p>
+                    <button id="activateSpeechBtn" class="activate-speech-btn">
+                        <i class="fas fa-volume-up"></i> 启用语音朗读
+                    </button>
+                    <button id="skipSpeechBtn" class="skip-speech-btn">
+                        暂时跳过
+                    </button>
+                    <div class="prompt-note">
+                        <small>💡 你可以随时在设置中重新启用语音功能</small>
+                    </div>
+                </div>
+            </div>
+
             <!-- 打字练习界面 -->
             <div id="typingInterface" class="typing-interface hidden">
                 <!-- 统计信息面板 -->
@@ -632,6 +651,13 @@
         if (dictionarySelection) dictionarySelection.classList.add('hidden');
         if (chapterSelection) chapterSelection.classList.add('hidden');
         if (typingInterface) typingInterface.classList.remove('hidden');
+        
+        // 检查是否需要显示语音激活提示
+        setTimeout(() => {
+            if (typeof showSpeechActivationPrompt === 'function') {
+                showSpeechActivationPrompt();
+            }
+        }, 500);
         
         // 加载当前单词
         loadCurrentWord();
