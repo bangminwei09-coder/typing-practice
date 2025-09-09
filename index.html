@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>练习打字 - 提升你的打字速度</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- 实时输入进度样式 -->
+    <style>
+    #currentWord {
+        font-family: 'Courier New', monospace;
+        font-size: 2.5em;
+        font-weight: bold;
+        letter-spacing: 2px;
+        margin: 20px 0;
+        user-select: none;
+    }
+    
+    /* 正确输入的字母 - 绿色背景 */
+    .letter-correct {
+        background-color: #4CAF50;
+        color: white;
+        padding: 4px 2px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    /* 错误输入的字母 - 红色背景 */
+    .letter-wrong {
+        background-color: #f44336;
+        color: white;
+        padding: 4px 2px;
+        border-radius: 4px;
+        animation: shake 0.3s ease-in-out;
+    }
+    
+    /* 当前正在输入的字母 - 绿色背景闪烁 */
+    .letter-current {
+        background-color: #8BC34A;
+        color: white;
+        padding: 4px 2px;
+        border-radius: 4px;
+        animation: pulse 1s infinite;
+        box-shadow: 0 0 10px rgba(139, 195, 74, 0.6);
+    }
+    
+    /* 待输入的字母 - 灰色 */
+    .letter-pending {
+        color: #9e9e9e;
+        padding: 4px 2px;
+        transition: color 0.2s ease;
+    }
+    
+    /* 脉冲动画 */
+    @keyframes pulse {
+        0% {
+            background-color: #8BC34A;
+            transform: scale(1);
+        }
+        50% {
+            background-color: #4CAF50;
+            transform: scale(1.05);
+        }
+        100% {
+            background-color: #8BC34A;
+            transform: scale(1);
+        }
+    }
+    
+    /* 抖动动画 */
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-2px); }
+        75% { transform: translateX(2px); }
+    }
+    
+    /* 完成动画 */
+    .letter-complete {
+        background-color: #4CAF50;
+        color: white;
+        padding: 4px 2px;
+        border-radius: 4px;
+        animation: complete 0.6s ease-in-out;
+    }
+    
+    @keyframes complete {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); background-color: #81C784; }
+        100% { transform: scale(1); background-color: #4CAF50; }
+    }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 顶部导航栏 -->
+        <header class="header">
+            <div class="nav">
+                <div class="nav-left">
+                    <h1 class="logo">
+                        <i class="fas fa-keyboard"></i>
+                        练习打字
+                    </h1>
+                </div>
+                <div class="nav-right">
+                    <button id="themeToggle" class="theme-toggle" title="切换主题">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button id="settingsBtn" class="settings-btn" title="设置">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容区域 -->
+        <main class="main">
+            <!-- 词典选择界面 -->
+            <div id="dictionarySelection" class="dictionary-selection">
+                <h2>词典选择</h2>
+                <div class="dictionary-grid">
+                    <div class="dictionary-category">
+                        <h3>英语学习</h3>
+                        <div class="dictionary-cards">
+                            <div class="dictionary-card" data-dict="cet4">
+                                <div class="card-header">
+                                    <h4>CET-4</h4>
+                                    <span class="check-icon">✓</span>
+                                </div>
+                                <p>大学英语四级词汇</p>
+                                <div class="word-count">360词 · 18章节</div>
+                            </div>
+                            <div class="dictionary-card" data-dict="cet6">
+                                <div class="card-header">
+                                    <h4>CET-6</h4>
+                                </div>
+                                <p>大学英语六级词汇</p>
+                                <div class="word-count">400词 · 20章节</div>
+                            </div>
+                            <div class="dictionary-card" data-dict="gmat">
+                                <div class="card-header">
+                                    <h4>GMAT</h4>
+                                </div>
+                                <p>GMAT 词汇</p>
+                                <div class="word-count">400词 · 20章节</div>
+                            </div>
+                            <div class="dictionary-card" data-dict="gre">
+                                <div class="card-header">
+                                    <h4>GRE</h4>
+                                </div>
+                                <p>GRE 词汇</p>
+                                <div class="word-count">420词 · 21章节</div>
+                            </div>
+                            <div class="dictionary-card" data-dict="ielts">
+                                <div class="card-header">
+                                    <h4>IELTS</h4>
+                                </div>
+                                <p>雅思词汇</p>
+                                <div class="word-count">420词 · 21章节</div>
+                            </div>
+                            <div class="dictionary-card" data-dict="kaoyan">
+                                <div class="card-header">
+                                    <h4>考研</h4>
+                                </div>
+                                <p>研究生英语入学考试词汇</p>
+                                <div class="word-count">420词 · 21章节</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 章节选择界面 -->
+            <div id="chapterSelection" class="chapter-selection hidden">
+                <div class="chapter-header">
+                    <button id="backToDict" class="back-btn">
+                        <i class="fas fa-arrow-left"></i>
+                        返回词典选择
+                    </button>
+                    <h2 id="selectedDictTitle">章节选择</h2>
+                </div>
+                <div class="chapter-grid" id="chapterGrid">
+                    <!-- 章节将通过JavaScript动态生成 -->
+                </div>
+            </div>
+
+            <!-- 打字练习界面 -->
+            <div id="typingInterface" class="typing-interface hidden">
+                <!-- 统计信息面板 -->
+                <div class="stats-panel">
+                    <div class="stat-item">
+                        <div class="stat-label">时间</div>
+                        <div class="stat-value" id="timeValue">00:01</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">输入数</div>
+                        <div class="stat-value" id="inputCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">速度</div>
+                        <div class="stat-value" id="speedValue">0.00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">正确数</div>
+                        <div class="stat-value" id="correctCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">正确率</div>
+                        <div class="stat-value" id="accuracyValue">0.00</div>
+                    </div>
+                </div>
+
+                <!-- 单词练习区域 -->
+                <div class="word-practice-area">
+                    <div class="current-word-container">
+                        <div class="word-display">
+                            <div id="currentWord" class="current-word">possess</div>
+                            <button id="pronounceBtn" class="pronounce-btn">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </div>
+                        <div class="phonetic-display">
+                            <span class="phonetic-us">US: [pəˈzes]</span>
+                            <span class="phonetic-uk">UK: [pəˈzes]</span>
+                        </div>
+                        <div class="meaning-display">占用，拥有</div>
+                        <div class="pronunciation-tip">
+                            <small>💡 单词会自动朗读，也可点击发音按钮手动朗读</small>
+                            <div id="chromeTip" style="display: none; margin-top: 8px; padding: 8px; background: #fff3e0; border: 1px solid #ff9800; border-radius: 4px; font-size: 12px;">
+                                🔧 <strong>Chrome用户提示：</strong><br>
+                                如果听不到朗读，请在地址栏输入 <code>chrome://settings/content/sound</code><br>
+                                在"允许"部分添加本网站地址，然后刷新页面
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="input-container">
+                        <input type="text" id="wordInput" class="word-input" placeholder="请输入单词..." autocomplete="off" spellcheck="false">
+                        <div class="input-feedback" id="inputFeedback"></div>
+                    </div>
+                </div>
+
+                <!-- 控制按钮 -->
+                <div class="controls">
+                    <button id="backToChapter" class="control-btn secondary">
+                        <i class="fas fa-arrow-left"></i>
+                        返回章节
+                    </button>
+                    <button id="skipWord" class="control-btn">
+                        <i class="fas fa-forward"></i>
+                        跳过单词
+                    </button>
+                    <button id="resetPractice" class="control-btn">
+                        <i class="fas fa-redo"></i>
+                        重新开始
+                    </button>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 设置面板 -->
+        <div id="settingsPanel" class="settings-panel hidden">
+            <div class="settings-content">
+                <h3>设置</h3>
+                <div class="setting-item">
+                    <label>练习时长 (分钟)</label>
+                    <select id="durationSetting">
+                        <option value="1">1 分钟</option>
+                        <option value="3" selected>3 分钟</option>
+                        <option value="5">5 分钟</option>
+                        <option value="10">10 分钟</option>
+                        <option value="0">无限制</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label>音效反馈</label>
+                    <input type="checkbox" id="soundSetting" checked>
+                </div>
+                <div class="setting-item">
+                    <label>打字音效</label>
+                    <input type="checkbox" id="typingSoundSetting" checked>
+                </div>
+                <div class="setting-item">
+                    <label>显示虚拟键盘</label>
+                    <input type="checkbox" id="keyboardSetting" checked>
+                </div>
+                <div class="setting-item">
+                    <label>字体大小</label>
+                    <select id="fontSizeSetting">
+                        <option value="16">小</option>
+                        <option value="18" selected>中</option>
+                        <option value="20">大</option>
+                        <option value="24">特大</option>
+                    </select>
+                </div>
+                <button id="closeSettings" class="close-btn">关闭</button>
+            </div>
+        </div>
+
+        <!-- 自定义文本面板 -->
+        <div id="customTextPanel" class="custom-text-panel hidden">
+            <div class="custom-text-content">
+                <h3>自定义练习文本</h3>
+                <textarea id="customTextInput" placeholder="在这里输入你想要练习的文本..."></textarea>
+                <div class="custom-text-controls">
+                    <button id="saveCustomText" class="save-btn">保存并开始</button>
+                    <button id="closeCustomText" class="close-btn">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="words-data.js"></script>
+    <script src="script.js"></script>
+    
+    <!-- 词汇数据验证脚本 -->
+    <script>
+    // 立即检查词汇数据是否加载
+    console.log('🔍 立即检查词汇数据加载状态');
+    console.log('  typeof wordsDatabase:', typeof wordsDatabase);
+    console.log('  window.wordsDatabase:', !!window.wordsDatabase);
+    
+        // 如果wordsDatabase存在但window.wordsDatabase不存在，手动设置
+        if (typeof wordsDatabase !== 'undefined' && !window.wordsDatabase) {
+            window.wordsDatabase = wordsDatabase;
+            window.getChapterWords = getChapterWords;
+            window.getTotalChapters = getTotalChapters;
+            console.log('✅ 手动设置全局词汇数据');
+        }
+        
+        // 加载保存的主题
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        const themeIcon = document.querySelector('#themeToggle i');
+        if (themeIcon) {
+            themeIcon.className = savedTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+        console.log('🎨 加载主题:', savedTheme);
+    </script>
+    
+    <!-- 紧急修复脚本 -->
+    <script>
+    // 确保DOM加载完成后执行
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fixClickEvents);
+    } else {
+        fixClickEvents();
+    }
+    
+    function fixClickEvents() {
+        console.log('🔧 紧急修复 - 重新绑定点击事件');
+        
+        // 等待词汇数据加载
+        if (!window.wordsDatabase) {
+            console.log('⏳ 等待词汇数据加载...');
+            setTimeout(fixClickEvents, 500);  // 500ms后重试
+            return;
+        }
+        
+        // 检查words-data.js是否正确加载
+        console.log('📊 检查词汇数据:');
+        console.log('  wordsDatabase存在:', !!window.wordsDatabase);
+        if (window.wordsDatabase) {
+            console.log('  可用词典:', Object.keys(window.wordsDatabase));
+            console.log('  CET4章节数:', window.wordsDatabase.cet4 ? Object.keys(window.wordsDatabase.cet4).length : 0);
+            console.log('  CET6章节数:', window.wordsDatabase.cet6 ? Object.keys(window.wordsDatabase.cet6).length : 0);
+            
+            // 详细检查每个词典的数据
+            Object.keys(window.wordsDatabase).forEach(dict => {
+                const chapters = Object.keys(window.wordsDatabase[dict]);
+                console.log(`  ${dict}:`, chapters.map(ch => {
+                    const words = window.wordsDatabase[dict][ch];
+                    return `${ch}(${words.length}词)`;
+                }).join(', '));
+            });
+        }
+        
+        // 直接获取所有词典卡片
+        const cards = document.querySelectorAll('.dictionary-card');
+        console.log('🔍 找到词典卡片:', cards.length);
+        
+        // 为每个卡片绑定点击事件
+        cards.forEach(function(card, index) {
+            const dictKey = card.getAttribute('data-dict');
+            console.log('📌 绑定卡片:', dictKey);
+            
+            // 移除可能存在的旧事件监听器
+            card.removeEventListener('click', handleCardClick);
+            
+            // 添加新的事件监听器
+            card.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('✅ 点击成功:', dictKey);
+                
+                // 直接执行界面切换
+                const dictionarySelection = document.getElementById('dictionarySelection');
+                const chapterSelection = document.getElementById('chapterSelection');
+                const title = document.getElementById('selectedDictTitle');
+                
+                if (dictionarySelection && chapterSelection && title) {
+                    // 隐藏词典选择界面
+                    dictionarySelection.classList.add('hidden');
+                    // 显示章节选择界面
+                    chapterSelection.classList.remove('hidden');
+                    // 更新标题
+                    title.textContent = dictKey.toUpperCase() + ' - 章节选择';
+                    
+                    // 生成章节内容
+                    generateChapters(dictKey);
+                    
+                    console.log('🎯 界面切换成功!');
+                } else {
+                    console.error('❌ 找不到必要的DOM元素');
+                }
+            });
+        });
+        
+        // 绑定返回按钮
+        const backBtn = document.getElementById('backToDict');
+        if (backBtn) {
+            backBtn.addEventListener('click', function() {
+                console.log('🔙 返回词典选择');
+                showDictionarySelection();
+            });
+        }
+        
+        const backToChapterBtn = document.getElementById('backToChapter');
+        if (backToChapterBtn) {
+            backToChapterBtn.addEventListener('click', function() {
+                console.log('🔙 返回章节选择');
+                showChapterSelection();
+            });
+        }
+        
+        // 绑定输入事件
+        const wordInput = document.getElementById('wordInput');
+        if (wordInput) {
+            wordInput.addEventListener('input', handleWordInput);
+            wordInput.addEventListener('keydown', handleKeyDown);
+            console.log('✅ 输入事件已绑定');
+        }
+        
+        // 绑定发音按钮
+        const pronounceBtn = document.getElementById('pronounceBtn');
+        if (pronounceBtn) {
+            pronounceBtn.addEventListener('click', function() {
+                if (window.chapterWords && window.chapterWords[window.currentWordIndex]) {
+                    speakWord(window.chapterWords[window.currentWordIndex].word);
+                }
+            });
+        }
+        
+        // 绑定主题切换按钮
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', function() {
+                toggleTheme();
+            });
+            console.log('✅ 主题切换按钮已绑定');
+        }
+        
+        // 绑定设置按钮
+        const settingsBtn = document.getElementById('settingsBtn');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', function() {
+                toggleSettings();
+            });
+            console.log('✅ 设置按钮已绑定');
+        }
+        
+        // 绑定跳过单词按钮
+        const skipWordBtn = document.getElementById('skipWord');
+        if (skipWordBtn) {
+            skipWordBtn.addEventListener('click', function() {
+                skipCurrentWord();
+            });
+            console.log('✅ 跳过单词按钮已绑定');
+        }
+        
+        // 绑定重新开始按钮
+        const resetPracticeBtn = document.getElementById('resetPractice');
+        if (resetPracticeBtn) {
+            resetPracticeBtn.addEventListener('click', function() {
+                restartChapter();
+            });
+            console.log('✅ 重新开始按钮已绑定');
+        }
+    }
+    
+    function handleCardClick() {
+        // 占位函数，用于removeEventListener
+    }
+    
+    // 生成章节内容
+    function generateChapters(dictKey) {
+        console.log('📚 生成章节内容:', dictKey);
+        
+        // 详细检查该词典的数据结构
+        console.log('🔍 词典数据检查:');
+        console.log('  wordsDatabase:', !!window.wordsDatabase);
+        console.log('  该词典存在:', !!window.wordsDatabase[dictKey]);
+        if (window.wordsDatabase[dictKey]) {
+            console.log('  该词典的章节:', Object.keys(window.wordsDatabase[dictKey]));
+            console.log('  第一章示例:', window.wordsDatabase[dictKey].chapter1);
+        }
+        
+        const chapterGrid = document.getElementById('chapterGrid');
+        if (!chapterGrid) {
+            console.error('❌ 找不到章节网格容器');
+            return;
+        }
+        
+        // 清空现有内容
+        chapterGrid.innerHTML = '';
+        
+        // 设置网格布局样式
+        chapterGrid.style.cssText = `
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        `;
+        
+        // 创建章节卡片
+        for (let i = 1; i <= 20; i++) {
+            const chapterCard = document.createElement('div');
+            chapterCard.className = 'chapter-card';
+            chapterCard.style.cssText = `
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                padding: 20px;
+                margin: 10px;
+                text-align: center;
+                background: #ffffff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                transition: all 0.3s ease;
+                min-height: 100px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            `;
+            
+            // 检查该章节是否有词汇数据
+            let wordCount = 0;
+            
+            // 优先使用全局函数
+            if (window.getChapterWords) {
+                const words = window.getChapterWords(dictKey, i);
+                wordCount = words.length;
+                console.log(`🔍 ${dictKey} chapter${i}: ${wordCount} 词汇`);
+            } else {
+                // 备用方法
+                const chapterKey = 'chapter' + i;
+                if (window.wordsDatabase && window.wordsDatabase[dictKey] && window.wordsDatabase[dictKey][chapterKey]) {
+                    wordCount = window.wordsDatabase[dictKey][chapterKey].length;
+                    console.log(`✅ ${dictKey} ${chapterKey} 有 ${wordCount} 个词汇`);
+                } else {
+                    console.log(`❌ ${dictKey} ${chapterKey} 没有数据`);
+                }
+            }
+            
+            chapterCard.innerHTML = `
+                <h4>Chapter ${i}</h4>
+                <p>${wordCount} 词</p>
+            `;
+            
+            // 如果有词汇数据，设置为可点击
+            if (wordCount > 0) {
+                chapterCard.classList.add('available');
+                chapterCard.style.cursor = 'pointer';
+                chapterCard.style.borderColor = '#007bff';
+                chapterCard.addEventListener('mouseover', function() {
+                    chapterCard.style.backgroundColor = '#f0f8ff';
+                    chapterCard.style.transform = 'translateY(-2px)';
+                });
+                chapterCard.addEventListener('mouseout', function() {
+                    chapterCard.style.backgroundColor = '#ffffff';
+                    chapterCard.style.transform = 'translateY(0)';
+                });
+                chapterCard.addEventListener('click', function() {
+                    console.log('🎯 选择章节:', i, '词汇数量:', wordCount);
+                    
+                    // 开始打字练习
+                    window.currentDictionary = dictKey;
+                    window.currentChapter = i;
+                    window.currentWordIndex = 0;
+                    
+                    // 加载章节单词
+                    if (window.getChapterWords) {
+                        window.chapterWords = window.getChapterWords(dictKey, i);
+                        console.log('📚 加载章节单词:', window.chapterWords.length, '个');
+                        
+                        if (window.chapterWords.length > 0) {
+                            showTypingInterface();
+                        } else {
+                            alert('该章节暂无词汇数据');
+                        }
+                    } else {
+                        alert('词汇加载功能不可用');
+                    }
+                });
+            } else {
+                chapterCard.classList.add('unavailable');
+                chapterCard.style.opacity = '0.5';
+                chapterCard.style.cursor = 'not-allowed';
+                chapterCard.style.borderColor = '#cccccc';
+                chapterCard.style.color = '#999999';
+            }
+            
+            chapterGrid.appendChild(chapterCard);
+        }
+        
+        console.log('✅ 章节内容生成完成');
+    }
+    
+    // 显示打字练习界面
+    function showTypingInterface() {
+        console.log('📱 显示打字练习界面');
+        
+        // 隐藏其他界面
+        const dictionarySelection = document.getElementById('dictionarySelection');
+        const chapterSelection = document.getElementById('chapterSelection');
+        const typingInterface = document.getElementById('typingInterface');
+        
+        if (dictionarySelection) dictionarySelection.classList.add('hidden');
+        if (chapterSelection) chapterSelection.classList.add('hidden');
+        if (typingInterface) typingInterface.classList.remove('hidden');
+        
+        // 加载当前单词
+        loadCurrentWord();
+        
+        // 重置统计
+        resetStats();
+        
+        // 聚焦输入框
+        const wordInput = document.getElementById('wordInput');
+        if (wordInput) {
+            wordInput.focus();
+            wordInput.value = '';
+        }
+    }
+    
+    // 加载当前单词
+    function loadCurrentWord() {
+        if (!window.chapterWords || window.currentWordIndex >= window.chapterWords.length) {
+            completeChapter();
+            return;
+        }
+        
+        const currentWord = window.chapterWords[window.currentWordIndex];
+        console.log('📖 当前单词:', currentWord);
+        
+        // 显示单词信息
+        const currentWordEl = document.getElementById('currentWord');
+        const phoneticUS = document.querySelector('.phonetic-us');
+        const phoneticUK = document.querySelector('.phonetic-uk');
+        const meaningDisplay = document.querySelector('.meaning-display');
+        
+        // 创建带进度显示的单词
+        if (currentWordEl) {
+            updateWordProgress(currentWord.word, '');
+        }
+        if (phoneticUS) phoneticUS.textContent = currentWord.phonetic.us;
+        if (phoneticUK) phoneticUK.textContent = currentWord.phonetic.uk;
+        if (meaningDisplay) meaningDisplay.textContent = currentWord.meaning;
+        
+        // 自动朗读单词
+        speakWord(currentWord.word);
+        
+        // 清空输入框
+        const wordInput = document.getElementById('wordInput');
+        if (wordInput) {
+            wordInput.value = '';
+            wordInput.focus();
+        }
+    }
+    
+    // 朗读单词
+    function speakWord(text) {
+        // 检查朗读设置
+        if (localStorage.getItem('soundEnabled') === 'false') {
+            console.log('🔇 朗读已禁用');
+            return;
+        }
+        
+        console.log('🔊 朗读单词:', text);
+        
+        if ('speechSynthesis' in window) {
+            try {
+                speechSynthesis.cancel();
+                
+                setTimeout(() => {
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    const voices = speechSynthesis.getVoices();
+                    
+                    // 选择英语语音
+                    const englishVoice = voices.find(v => 
+                        v.lang.includes('en-US') || v.lang.includes('en')
+                    );
+                    if (englishVoice) {
+                        utterance.voice = englishVoice;
+                    }
+                    
+                    utterance.lang = 'en-US';
+                    utterance.volume = 1.0;
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.0;
+                    
+                    utterance.onstart = () => console.log('🎵 开始朗读');
+                    utterance.onend = () => console.log('🎵 朗读完成');
+                    utterance.onerror = (e) => {
+                        console.error('朗读错误:', e);
+                        playNotificationSound();
+                    };
+                    
+                    speechSynthesis.speak(utterance);
+                }, 100);
+            } catch (error) {
+                console.error('朗读失败:', error);
+                playNotificationSound();
+            }
+        } else {
+            console.warn('浏览器不支持语音合成');
+            playNotificationSound();
+        }
+    }
+    
+    // 更新单词输入进度显示
+    function updateWordProgress(targetWord, inputText) {
+        const currentWordEl = document.getElementById('currentWord');
+        if (!currentWordEl) return;
+        
+        let htmlContent = '';
+        
+        for (let i = 0; i < targetWord.length; i++) {
+            const letter = targetWord[i];
+            let letterClass = '';
+            
+            if (i < inputText.length) {
+                // 已输入的字母
+                if (inputText[i] === letter) {
+                    letterClass = 'letter-correct';  // 正确的字母
+                } else {
+                    letterClass = 'letter-wrong';    // 错误的字母
+                }
+            } else if (i === inputText.length) {
+                // 当前正在输入的字母
+                letterClass = 'letter-current';
+            } else {
+                // 未输入的字母
+                letterClass = 'letter-pending';
+            }
+            
+            htmlContent += `<span class="${letterClass}">${letter}</span>`;
+        }
+        
+        currentWordEl.innerHTML = htmlContent;
+    }
+    
+    // 播放提示音
+    function playNotificationSound() {
+        if (typeof(AudioContext) !== "undefined" || typeof(webkitAudioContext) !== "undefined") {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.6, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.2);
+            } catch (e) {
+                console.error('播放提示音失败:', e);
+            }
+        }
+    }
+    
+    // 重置统计
+    function resetStats() {
+        window.startTime = Date.now();
+        window.totalInputs = 0;
+        window.correctInputs = 0;
+        updateStats();
+    }
+    
+    // 更新统计信息
+    function updateStats() {
+        const timeValue = document.getElementById('timeValue');
+        const inputCount = document.getElementById('inputCount');
+        const speedValue = document.getElementById('speedValue');
+        const correctCount = document.getElementById('correctCount');
+        const accuracyValue = document.getElementById('accuracyValue');
+        
+        if (window.startTime) {
+            const elapsed = Math.floor((Date.now() - window.startTime) / 1000);
+            if (timeValue) timeValue.textContent = elapsed;
+        }
+        
+        if (inputCount) inputCount.textContent = window.totalInputs || 0;
+        if (correctCount) correctCount.textContent = window.correctInputs || 0;
+        
+        const accuracy = window.totalInputs > 0 ? Math.round((window.correctInputs / window.totalInputs) * 100) : 100;
+        if (accuracyValue) accuracyValue.textContent = accuracy + '%';
+        
+        const minutes = window.startTime ? (Date.now() - window.startTime) / 60000 : 1;
+        const speed = Math.round((window.correctInputs || 0) / minutes);
+        if (speedValue) speedValue.textContent = speed;
+    }
+    
+    // 处理单词输入
+    function handleWordInput(e) {
+        const input = e.target.value;
+        const currentWord = window.chapterWords[window.currentWordIndex];
+        
+        if (!currentWord) return;
+        
+        const targetWord = currentWord.word;
+        const inputFeedback = document.getElementById('inputFeedback');
+        
+        // 实时更新单词进度显示
+        updateWordProgress(targetWord, input);
+        
+        // 逐字符检查
+        let isCorrect = true;
+        for (let i = 0; i < input.length; i++) {
+            if (i >= targetWord.length || input[i] !== targetWord[i]) {
+                isCorrect = false;
+                break;
+            }
+        }
+        
+        // 更新反馈显示
+        if (inputFeedback) {
+            if (input.length === 0) {
+                inputFeedback.textContent = '';
+                inputFeedback.className = '';
+            } else if (isCorrect) {
+                if (input.length === targetWord.length) {
+                    inputFeedback.textContent = '✅ 完成！';
+                    inputFeedback.className = 'correct complete';
+                } else {
+                    inputFeedback.textContent = '✓ 正确';
+                    inputFeedback.className = 'correct';
+                }
+            } else {
+                inputFeedback.textContent = '❌ 错误';
+                inputFeedback.className = 'error';
+                
+                // 检查是否启用严格模式
+                const strictMode = localStorage.getItem('strictMode') !== 'false';
+                if (strictMode) {
+                    // 严格模式：错误时清空输入
+                    setTimeout(() => {
+                        e.target.value = '';
+                        inputFeedback.textContent = '';
+                        inputFeedback.className = '';
+                        // 重置进度显示
+                        updateWordProgress(targetWord, '');
+                    }, 500);
+                } else {
+                    // 非严格模式：允许继续输入，但标记错误
+                    setTimeout(() => {
+                        inputFeedback.textContent = '';
+                        inputFeedback.className = '';
+                    }, 1000);
+                }
+                
+                playErrorSound();
+                return;
+            }
+        }
+        
+        // 统计输入
+        window.totalInputs = (window.totalInputs || 0) + 1;
+        if (isCorrect) {
+            window.correctInputs = (window.correctInputs || 0) + 1;
+        }
+        
+        updateStats();
+        
+        // 播放打字音效
+        if (isCorrect) {
+            playTypingSound();
+        }
+        
+        // 完成当前单词
+        if (isCorrect && input.length === targetWord.length) {
+            // 添加完成动画效果
+            const currentWordEl = document.getElementById('currentWord');
+            if (currentWordEl) {
+                const letters = currentWordEl.querySelectorAll('span');
+                letters.forEach(letter => {
+                    letter.className = 'letter-complete';
+                });
+            }
+            
+            setTimeout(() => {
+                window.currentWordIndex++;
+                loadCurrentWord();
+            }, 800);
+        }
+    }
+    
+    // 处理按键
+    function handleKeyDown(e) {
+        // Enter键跳过当前单词
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            skipCurrentWord();
+        }
+        
+        // Escape键返回章节选择
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            showChapterSelection();
+        }
+        
+        // 空格键重新朗读单词
+        if (e.key === ' ' || e.key === 'Space') {
+            e.preventDefault();
+            if (window.chapterWords && window.chapterWords[window.currentWordIndex]) {
+                speakWord(window.chapterWords[window.currentWordIndex].word);
+            }
+        }
+        
+        // R键重新开始功能已移除
+        
+        // Tab键跳过当前单词（备用方案）
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            skipCurrentWord();
+        }
+    }
+    
+    // 播放打字音效
+    function playTypingSound() {
+        // 检查音效设置
+        if (localStorage.getItem('typingSoundEnabled') === 'false') {
+            return;
+        }
+        
+        if (typeof(AudioContext) !== "undefined" || typeof(webkitAudioContext) !== "undefined") {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.error('播放打字音效失败:', e);
+            }
+        }
+    }
+    
+    // 播放错误音效
+    function playErrorSound() {
+        // 检查音效设置
+        if (localStorage.getItem('typingSoundEnabled') === 'false') {
+            return;
+        }
+        
+        if (typeof(AudioContext) !== "undefined" || typeof(webkitAudioContext) !== "undefined") {
+            try {
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                
+                oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                oscillator.start(audioContext.currentTime);
+                oscillator.stop(audioContext.currentTime + 0.3);
+            } catch (e) {
+                console.error('播放错误音效失败:', e);
+            }
+        }
+    }
+    
+    // 完成章节
+    function completeChapter() {
+        console.log('🎉 章节完成！');
+        const accuracy = window.totalInputs > 0 ? Math.round((window.correctInputs / window.totalInputs) * 100) : 100;
+        alert(`恭喜完成 ${window.currentDictionary.toUpperCase()} Chapter ${window.currentChapter}！\n\n总计输入: ${window.totalInputs}\n正确输入: ${window.correctInputs}\n准确率: ${accuracy}%`);
+        
+        // 返回章节选择
+        showChapterSelection();
+    }
+    
+    // 更新的显示章节选择界面函数
+    function showChapterSelection() {
+        console.log('📱 显示章节选择界面');
+        
+        const dictionarySelection = document.getElementById('dictionarySelection');
+        const chapterSelection = document.getElementById('chapterSelection');
+        const typingInterface = document.getElementById('typingInterface');
+        
+        if (dictionarySelection) dictionarySelection.classList.add('hidden');
+        if (chapterSelection) chapterSelection.classList.remove('hidden');
+        if (typingInterface) typingInterface.classList.add('hidden');
+        
+        // 如果有当前词典，重新生成章节
+        if (window.currentDictionary) {
+            generateChapters(window.currentDictionary);
+        }
+    }
+    
+    // 主题切换功能
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        
+        // 更新主题图标
+        const themeIcon = document.querySelector('#themeToggle i');
+        if (themeIcon) {
+            themeIcon.className = newTheme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+        
+        console.log('🎨 主题已切换为:', newTheme);
+    }
+    
+    // 设置面板切换
+    function toggleSettings() {
+        console.log('⚙️ 打开设置面板');
+        
+        // 创建设置弹窗
+        const existingModal = document.getElementById('settingsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'settingsModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: white;
+                border-radius: 12px;
+                padding: 30px;
+                max-width: 500px;
+                width: 90%;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <h3 style="margin-top: 0; color: #333; font-size: 1.5em;">⚙️ 设置</h3>
+                
+                <div style="margin: 20px 0;">
+                    <label style="display: flex; align-items: center; margin: 15px 0; font-size: 1.1em;">
+                        <input type="checkbox" id="soundSetting" style="margin-right: 10px;">
+                        🔊 启用朗读功能
+                    </label>
+                    
+                    <div style="margin: 15px 0;">
+                        <label style="display: block; margin-bottom: 5px; font-size: 1.1em;">
+                            🔊 朗读音量: <span id="volumeValue">100%</span>
+                        </label>
+                        <input type="range" id="volumeSetting" min="0" max="100" value="100" 
+                               style="width: 100%; margin: 5px 0;">
+                    </div>
+                    
+                    <label style="display: flex; align-items: center; margin: 15px 0; font-size: 1.1em;">
+                        <input type="checkbox" id="typingSoundSetting" style="margin-right: 10px;">
+                        🎵 启用打字音效
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; margin: 15px 0; font-size: 1.1em;">
+                        <input type="checkbox" id="strictModeSetting" style="margin-right: 10px;">
+                        🎯 严格模式（错误立即重新开始）
+                    </label>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #333; margin: 15px 0;">🎨 主题选择</h4>
+                    <button onclick="setTheme('light')" style="
+                        margin: 5px;
+                        padding: 10px 15px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                        background: white;
+                        cursor: pointer;
+                    ">☀️ 浅色主题</button>
+                    <button onclick="setTheme('dark')" style="
+                        margin: 5px;
+                        padding: 10px 15px;
+                        border: 2px solid #ddd;
+                        border-radius: 8px;
+                        background: #333;
+                        color: white;
+                        cursor: pointer;
+                    ">🌙 深色主题</button>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <h4 style="color: #333; margin: 15px 0;">🎮 快捷键</h4>
+                    <div style="font-size: 0.9em; color: #666;">
+                        <p>• <strong>Enter</strong> 或 <strong>Tab</strong>: 跳过当前单词</p>
+                        <p>• <strong>空格</strong>: 重新朗读单词</p>
+                        <p>• <strong>Escape</strong>: 返回章节选择</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <button onclick="closeSettings()" style="
+                        background: #007bff;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 1em;
+                    ">✅ 确定</button>
+                    <button onclick="resetSettings()" style="
+                        background: #6c757d;
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        font-size: 1em;
+                        margin-left: 10px;
+                    ">🔄 重置</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // 加载当前设置
+        loadSettingsValues();
+        
+        // 点击背景关闭
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) {
+                closeSettings();
+            }
+        });
+    }
+    
+    // 设置主题
+    window.setTheme = function(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        
+        const themeIcon = document.querySelector('#themeToggle i');
+        if (themeIcon) {
+            themeIcon.className = theme === 'light' ? 'fas fa-moon' : 'fas fa-sun';
+        }
+        
+        console.log('🎨 主题设置为:', theme);
+    };
+    
+    // 加载设置值
+    function loadSettingsValues() {
+        const soundSetting = document.getElementById('soundSetting');
+        const typingSoundSetting = document.getElementById('typingSoundSetting');
+        const strictModeSetting = document.getElementById('strictModeSetting');
+        const volumeSetting = document.getElementById('volumeSetting');
+        const volumeValue = document.getElementById('volumeValue');
+        
+        if (soundSetting) {
+            soundSetting.checked = localStorage.getItem('soundEnabled') !== 'false';
+            soundSetting.addEventListener('change', function() {
+                localStorage.setItem('soundEnabled', this.checked);
+            });
+        }
+        
+        if (volumeSetting && volumeValue) {
+            // 加载保存的音量设置
+            const savedVolume = localStorage.getItem('speechVolume') || '1.0';
+            const volumePercent = Math.round(parseFloat(savedVolume) * 100);
+            volumeSetting.value = volumePercent;
+            volumeValue.textContent = volumePercent + '%';
+            
+            // 监听音量变化
+            volumeSetting.addEventListener('input', function() {
+                const volume = this.value / 100;
+                volumeValue.textContent = this.value + '%';
+                localStorage.setItem('speechVolume', volume.toString());
+                
+                // 更新全局音量变量
+                window.speechVolume = volume;
+                // 如果script.js中有speechVolume变量，也更新它
+                if (typeof speechVolume !== 'undefined') {
+                    speechVolume = volume;
+                }
+                
+                console.log('音量设置更新为:', volume);
+            });
+        }
+        
+        if (typingSoundSetting) {
+            typingSoundSetting.checked = localStorage.getItem('typingSoundEnabled') !== 'false';
+            typingSoundSetting.addEventListener('change', function() {
+                localStorage.setItem('typingSoundEnabled', this.checked);
+            });
+        }
+        
+        if (strictModeSetting) {
+            strictModeSetting.checked = localStorage.getItem('strictMode') !== 'false';
+            strictModeSetting.addEventListener('change', function() {
+                localStorage.setItem('strictMode', this.checked);
+            });
+        }
+    }
+    
+    // 关闭设置
+    window.closeSettings = function() {
+        const modal = document.getElementById('settingsModal');
+        if (modal) {
+            modal.remove();
+        }
+    };
+    
+    // 重置设置
+    window.resetSettings = function() {
+        localStorage.removeItem('soundEnabled');
+        localStorage.removeItem('typingSoundEnabled');
+        localStorage.removeItem('strictMode');
+        localStorage.removeItem('theme');
+        
+        // 重新加载设置
+        loadSettingsValues();
+        setTheme('light');
+        
+        alert('✅ 设置已重置为默认值');
+    };
+    
+    // 跳过当前单词
+    function skipCurrentWord() {
+        console.log('⏭️ 跳过单词');
+        
+        if (!window.chapterWords || window.currentWordIndex >= window.chapterWords.length) {
+            console.log('没有可跳过的单词');
+            return;
+        }
+        
+        // 显示跳过提示
+        const inputFeedback = document.getElementById('inputFeedback');
+        if (inputFeedback) {
+            inputFeedback.textContent = '⏭️ 已跳过';
+            inputFeedback.className = 'skipped';
+            inputFeedback.style.color = '#ff9800';
+        }
+        
+        // 清空输入框
+        const wordInput = document.getElementById('wordInput');
+        if (wordInput) {
+            wordInput.value = '';
+        }
+        
+        // 更新统计（跳过算作一次输入，但不算正确）
+        window.totalInputs = (window.totalInputs || 0) + 1;
+        // 跳过不增加正确数
+        updateStats();
+        
+        // 延迟后跳到下一个单词
+        setTimeout(() => {
+            window.currentWordIndex++;
+            if (window.currentWordIndex >= window.chapterWords.length) {
+                completeChapter();
+            } else {
+                loadCurrentWord();
+            }
+        }, 600);
+    }
+    
+    // 重新开始当前章节
+    function restartChapter() {
+        console.log('🔄 重新开始章节');
+        
+        // 显示确认对话框
+        const currentProgress = window.currentWordIndex || 0;
+        const totalWords = window.chapterWords ? window.chapterWords.length : 0;
+        
+        const confirmMessage = `确定要重新开始当前章节吗？\n\n当前进度: ${currentProgress + 1}/${totalWords}\n重新开始将清除所有进度和统计数据。`;
+        
+        if (confirm(confirmMessage)) {
+            // 显示重新开始提示
+            const inputFeedback = document.getElementById('inputFeedback');
+            if (inputFeedback) {
+                inputFeedback.textContent = '🔄 重新开始中...';
+                inputFeedback.className = 'restarting';
+                inputFeedback.style.color = '#2196F3';
+            }
+            
+            // 短暂延迟后重新开始
+            setTimeout(() => {
+                // 重置到第一个单词
+                window.currentWordIndex = 0;
+                
+                // 重置统计
+                resetStats();
+                
+                // 重新加载当前单词
+                loadCurrentWord();
+                
+                // 清空输入框和聚焦
+                const wordInput = document.getElementById('wordInput');
+                if (wordInput) {
+                    wordInput.value = '';
+                    wordInput.focus();
+                }
+                
+                console.log('✅ 章节已重新开始');
+            }, 300);
+        }
+    }
+    </script>
+</body>
+</html>
