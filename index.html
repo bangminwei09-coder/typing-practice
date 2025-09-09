@@ -334,6 +334,7 @@
     </div>
 
     <script src="words-data.js"></script>
+    <script src="analytics.js"></script>
     <script src="script.js"></script>
     
     <!-- 词汇数据验证脚本 -->
@@ -658,6 +659,11 @@
                 showSpeechActivationPrompt();
             }
         }, 500);
+        
+        // 跟踪练习开始
+        if (typeof trackPracticeStart === 'function') {
+            trackPracticeStart(window.currentDictionary, window.currentChapter);
+        }
         
         // 加载当前单词
         loadCurrentWord();
